@@ -10,6 +10,7 @@ import ReconciliationPage from './pages/ReconciliationPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Loader from './components/ui/Loader';
+import { Toaster } from 'react-hot-toast';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -79,6 +80,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <Toaster position="top-right" toastOptions={{
+          className: 'border border-slate-200 shadow-lg text-slate-900 bg-white rounded-xl',
+          success: { iconTheme: { primary: '#06b6d4', secondary: '#white' } },
+        }} />
         <AppRoutes />
       </AuthProvider>
     </BrowserRouter>

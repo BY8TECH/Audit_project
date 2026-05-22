@@ -10,9 +10,9 @@ const pageTitles = {
   '/reconciliation': 'Reconciliation',
 };
 
-export default function Header() {
+export default function Header({ onLogoutClick }) {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const dropdownRef = useRef(null);
@@ -119,7 +119,7 @@ export default function Header() {
               </div>
               <div className="border-t border-slate-100 pt-1">
                 <button
-                  onClick={() => { setShowDropdown(false); logout(); }}
+                  onClick={() => { setShowDropdown(false); if (onLogoutClick) onLogoutClick(); }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-500 
                     hover:bg-rose-50 transition-colors duration-150">
                   <LogOut className="w-4 h-4" /> Logout

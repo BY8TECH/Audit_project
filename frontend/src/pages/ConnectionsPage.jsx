@@ -20,6 +20,7 @@ import { useFetch } from '../hooks/useFetch';
 import { integrationApi } from '../api/integrationApi';
 import { PLATFORM_LIST } from '../utils/constants';
 import { formatRelativeTime } from '../utils/formatters';
+import toast from 'react-hot-toast';
 
 const demoPlatforms = [
   {
@@ -89,7 +90,9 @@ export default function ConnectionsPage() {
     try {
       await integrationApi.syncData(platformId);
       refetch();
+      toast.success('Sync completed successfully');
     } catch {
+      toast.error('Sync failed');
       // Sync attempted
     } finally {
       setTimeout(() => {
@@ -111,8 +114,10 @@ export default function ConnectionsPage() {
       setShowConnectModal(false);
       setConnectForm({ api_key: '', api_secret: '', org_id: '' });
       refetch();
+      toast.success('Platform connected successfully!');
     } catch (err) {
       setConnectionError(err.response?.data?.detail || err.message || 'Failed to connect platform');
+      toast.error('Failed to connect platform');
     } finally {
       setConnecting(false);
     }
@@ -122,7 +127,9 @@ export default function ConnectionsPage() {
     try {
       await integrationApi.disconnectPlatform(platformId);
       refetch();
+      toast.success('Platform disconnected successfully');
     } catch {
+      toast.error('Failed to disconnect platform');
       // Disconnect attempted
     }
   };

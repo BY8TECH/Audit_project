@@ -27,9 +27,9 @@ const navItems = [
   { label: 'Reconciliation', path: '/reconciliation', icon: 'GitCompare' },
 ];
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle, onLogoutClick }) {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [hoveredItem, setHoveredItem] = useState(null);
 
   return (
@@ -130,7 +130,7 @@ export default function Sidebar({ collapsed, onToggle }) {
           )}
           {!collapsed && (
             <button
-              onClick={logout}
+              onClick={onLogoutClick}
               className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 
                 transition-all duration-200"
               title="Logout"

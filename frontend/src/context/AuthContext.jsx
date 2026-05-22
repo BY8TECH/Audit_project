@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import authApi from '../api/authApi';
 
 export const AuthContext = createContext(null);
@@ -42,9 +43,11 @@ export function AuthProvider({ children }) {
       localStorage.setItem('user', JSON.stringify(userData));
       setToken(authToken);
       setUser(userData);
+      toast.success('Successfully logged in!');
       return data;
     } catch (err) {
       const message = err.response?.data?.detail || err.response?.data?.message || 'Login failed';
+      toast.error(message);
       setError(message);
       throw new Error(message);
     }
@@ -64,9 +67,11 @@ export function AuthProvider({ children }) {
         // setToken(authToken);
         // setUser(userData);
       }
+      toast.success('Account created successfully!');
       return data;
     } catch (err) {
       const message = err.response?.data?.detail || err.response?.data?.message || 'Registration failed';
+      toast.error(message);
       setError(message);
       throw new Error(message);
     }
@@ -78,6 +83,7 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
     setError(null);
+    toast.success('Logged out successfully');
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
