@@ -8,6 +8,7 @@ import ConnectionsPage from './pages/ConnectionsPage';
 import IntegrationsPage from './pages/IntegrationsPage';
 import ReconciliationPage from './pages/ReconciliationPage';
 import SettingsPage from './pages/SettingsPage';
+import NotFoundPage from './pages/NotFoundPage';
 import Loader from './components/ui/Loader';
 
 function ProtectedRoute({ children }) {
@@ -68,7 +69,8 @@ function AppRoutes() {
 
       {/* Redirect root to dashboard */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* 404 Catch-all */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
