@@ -28,7 +28,7 @@ export default function LoginPage() {
   const fillDemoAccount = (role) => {
     setForm({
       ...form,
-      email: role === 'admin' ? 'admin@auditflow.com' : 'Hemanth@gmail.com',
+      email: role === 'admin' ? 'admin@auditflow.com' : 'hemanth@gmail.com',
       password: 'Hemanth@123'
     });
     setFormError('');
