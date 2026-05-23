@@ -25,6 +25,17 @@ export default function LoginPage() {
     clearError?.();
   };
 
+  const fillDemoAccount = (role) => {
+    setForm({
+      ...form,
+      email: role === 'admin' ? 'admin@auditflow.com' : 'Hemanth@gmail.com',
+      password: 'Hemanth@123'
+    });
+    setFormError('');
+    setSuccessMessage('');
+    clearError?.();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
@@ -226,6 +237,27 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Quick Demo Logins */}
+            {isLogin && (
+              <div className="flex items-center gap-3 pt-1 pb-2 animate-fade-in">
+                <span className="text-xs text-slate-500 font-medium">Quick Login:</span>
+                {/*<button
+                  type="button"
+                  onClick={() => fillDemoAccount('admin')}
+                  className="px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
+                >
+                  Admin
+                </button>*/}
+                <button
+                  type="button"
+                  onClick={() => fillDemoAccount('auditor')}
+                  className="px-3 py-1 text-xs font-medium bg-brand-cyan/10 text-brand-cyan rounded-lg hover:bg-brand-cyan/20 transition-colors border border-brand-cyan/20"
+                >
+                  Auditor
+                </button>
+              </div>
+            )}
 
             {/* Submit */}
             <button
