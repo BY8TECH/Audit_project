@@ -82,6 +82,12 @@ export default function ReconciliationPage() {
         from: dateFrom,
         to: dateTo,
       });
+      
+      // If API returns empty or invalid data, throw error to use demo data
+      if (!data || !data.summary || !data.mismatches || data.mismatches.length === 0) {
+        throw new Error("Empty or invalid data");
+      }
+      
       setResults(data);
     } catch {
       // Use demo data on API failure
