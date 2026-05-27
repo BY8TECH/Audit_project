@@ -83,7 +83,21 @@ export default function ConnectionsPage() {
     refetch,
   } = useFetch(useCallback(() => integrationApi.getPlatforms(), []), [], { initialData: null });
 
-  const platforms = platformsData?.platforms || platformsData || demoPlatforms;
+  const backendConnections = platformsData?.platforms || (Array.isArray(platformsData) ? platformsData : null);
+
+  const platforms = backendConnections
+    ? PLATFORM_LIST.map(staticPlatform => {
+        const conn = backendConnections.find(p => p.platform === staticPlatform.id);
+        return {
+          ...staticPlatform,
+          status: conn ? conn.status : 'disconnected',
+          last_sync: conn ? conn.last_sync_at : null,
+          record_count: conn ? conn.records_synced : 0,
+          health: conn ? (conn.status === 'connected' ? 'good' : 'warning') : 'offline',
+          connection_id: conn?.id,
+        };
+      })
+    : demoPlatforms;
 
   const handleSync = async (platformId) => {
     setSyncingIds((prev) => new Set([...prev, platformId]));
@@ -123,9 +137,10 @@ export default function ConnectionsPage() {
     }
   };
 
-  const handleDisconnect = async (platformId) => {
+  const handleDisconnect = async (platform) => {
     try {
-      await integrationApi.disconnectPlatform(platformId);
+      const idToDisconnect = platform.connection_id || platform.id;
+      await integrationApi.disconnectPlatform(idToDisconnect);
       refetch();
       toast.success('Platform disconnected successfully');
     } catch {
@@ -258,7 +273,7 @@ export default function ConnectionsPage() {
                       variant="danger"
                       size="sm"
                       icon={Unplug}
-                      onClick={() => handleDisconnect(platform.id)}
+                      onClick={() => handleDisconnect(platform)}
                     >
                       Disconnect
                     </Button>
