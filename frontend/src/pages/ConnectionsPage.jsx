@@ -99,10 +99,13 @@ export default function ConnectionsPage() {
       })
     : demoPlatforms;
 
-  const handleSync = async (platformId) => {
-    setSyncingIds((prev) => new Set([...prev, platformId]));
+  const handleSync = async (platform) => {
+    const idForUi = platform.id;
+    const idForApi = platform.connection_id || platform.id;
+    
+    setSyncingIds((prev) => new Set([...prev, idForUi]));
     try {
-      await integrationApi.syncData(platformId);
+      await integrationApi.syncData(idForApi);
       refetch();
       toast.success('Sync completed successfully');
     } catch {
@@ -112,7 +115,7 @@ export default function ConnectionsPage() {
       setTimeout(() => {
         setSyncingIds((prev) => {
           const next = new Set(prev);
-          next.delete(platformId);
+          next.delete(idForUi);
           return next;
         });
       }, 2000);
@@ -264,7 +267,7 @@ export default function ConnectionsPage() {
                       size="sm"
                       icon={RefreshCw}
                       loading={isSyncing}
-                      onClick={() => handleSync(platform.id)}
+                      onClick={() => handleSync(platform)}
                       className="flex-1"
                     >
                       {isSyncing ? 'Syncing...' : 'Sync Now'}
