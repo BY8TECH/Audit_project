@@ -1,0 +1,5 @@
+Customer Name,Invoice Number,Invoice Date,Item Name,Item Price,Item Quantity
+Acme Corp,INV-0089,2026-05-01,Consulting Services,245000,1
+Acme Corp,INV-0102,2026-05-10,Software License,180000,1
+Apex Solutions,INV-0118,2026-05-15,Implementation Fee,32400,1
+Apex Solutions,INV-0125,2026-05-20,Annual Support,420000,1
