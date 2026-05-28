@@ -39,6 +39,16 @@ export const formatCompactNumber = (num) => {
 };
 
 /**
+ * Helper to ensure naive ISO strings are parsed as UTC
+ */
+const ensureUTC = (dateString) => {
+  if (typeof dateString === 'string' && dateString.includes('T') && !dateString.endsWith('Z') && !dateString.match(/[+-]\d{2}:?\d{2}$/)) {
+    return dateString + 'Z';
+  }
+  return dateString;
+};
+
+/**
  * Format a date string
  */
 export const formatDate = (dateString, options = {}) => {
@@ -52,7 +62,7 @@ export const formatDate = (dateString, options = {}) => {
   };
 
   try {
-    return new Date(dateString).toLocaleDateString('en-IN', defaultOptions);
+    return new Date(ensureUTC(dateString)).toLocaleDateString('en-IN', defaultOptions);
   } catch {
     return dateString;
   }
@@ -64,7 +74,7 @@ export const formatDate = (dateString, options = {}) => {
 export const formatDateTime = (dateString) => {
   if (!dateString) return '—';
   try {
-    return new Date(dateString).toLocaleString('en-IN', {
+    return new Date(ensureUTC(dateString)).toLocaleString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -82,7 +92,7 @@ export const formatDateTime = (dateString) => {
 export const formatRelativeTime = (dateString) => {
   if (!dateString) return '—';
   
-  const date = new Date(dateString);
+  const date = new Date(ensureUTC(dateString));
   const now = new Date();
   const diffMs = now - date;
   const diffSecs = Math.floor(diffMs / 1000);
