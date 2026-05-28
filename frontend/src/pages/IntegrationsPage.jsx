@@ -92,6 +92,8 @@ export default function IntegrationsPage() {
   const [previewData, setPreviewData] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
 
+  const { data: platformsData } = useFetch(useCallback(() => integrationApi.getPlatforms(), []), [], { initialData: null });
+
   const toggleExpand = (platformId) => {
     setExpandedPlatform(expandedPlatform === platformId ? null : platformId);
   };
@@ -99,11 +101,58 @@ export default function IntegrationsPage() {
   const handlePreview = async (platformId) => {
     setPreviewPlatform(platformId);
     setPreviewLoading(true);
-    // Simulate network delay for preview
-    setTimeout(() => {
+
+    try {
+      const backendConnections = platformsData?.platforms || (Array.isArray(platformsData) ? platformsData : null);
+      let connectionId = null;
+      if (backendConnections) {
+         const conn = backendConnections.find(p => p.platform === platformId);
+         if (conn && conn.id) {
+            connectionId = conn.id;
+         }
+      }
+      
+      if (connectionId) {
+        const response = await integrationApi.getData(connectionId, { page_size: 10 });
+        if (response && response.items && response.items.length > 0) {
+           const mappedData = response.items.map(item => {
+              if (platformId === 'zoho_books') {
+                  return {
+                      id: item.reference_number || item.reference_id,
+                      date: item.date,
+                      description: item.description || item.party_name || 'Record',
+                      amount: item.total_amount || item.amount,
+                      status: item.status
+                  };
+              }
+              return {
+                  id: item.reference_number || item.reference_id,
+                  date: item.date,
+                  description: item.description || item.party_name,
+                  amount: item.total_amount || item.amount,
+                  status: item.status,
+                  ledger: item.party_name,
+                  debit: item.amount > 0 ? item.amount : 0,
+                  credit: item.amount < 0 ? Math.abs(item.amount) : 0,
+                  narration: item.description,
+                  period: item.reference_number,
+                  type: item.data_type,
+                  taxable_value: item.amount,
+                  tax: item.tax_amount
+              };
+           });
+           setPreviewData(mappedData);
+           return;
+        }
+      }
+      // Fallback
       setPreviewData(demoPreviewData[platformId] || []);
+    } catch (err) {
+      console.error(err);
+      setPreviewData(demoPreviewData[platformId] || []);
+    } finally {
       setPreviewLoading(false);
-    }, 600);
+    }
   };
 
   return (
