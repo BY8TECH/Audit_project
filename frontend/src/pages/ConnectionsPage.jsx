@@ -137,15 +137,8 @@ export default function ConnectionsPage() {
       localStorage.setItem('zoho_pending_org_id', connectForm.org_id);
       
       // Redirect to Zoho OAuth
-      const clientId = '1000.7H66A16WHT16E4I816B61168L6I61W'; // Should be from backend config ideally, but hardcoding for PoC or fetched
-      // We will assume the user has configured this in backend, but frontend needs it. 
-      // A better way is to hit a backend endpoint to get the auth URL, but for simplicity:
-      const authUrl = `https://accounts.zoho.in/oauth/v2/auth?response_type=code&client_id=1000.XYPLYRU3UM8GAXPR6GJ9M58I4XWOXV&scope=ZohoBooks.fullaccess.all&redirect_uri=http://localhost:5173/integrations/zoho/callback&access_type=offline&prompt=consent`;
-      // But wait! We don't have the client_id here. Let's just use a placeholder that the user will replace, 
-      // OR let's ask the backend for the URL.
-      // For now, I'll put a placeholder and tell the user to update it, OR I can fetch it.
-      // Let's redirect to a placeholder, or even better, let the user configure client_id in the frontend env.
-      window.location.href = `https://accounts.zoho.in/oauth/v2/auth?response_type=code&client_id=1000.XYPLYRU3UM8GAXPR6GJ9M58I4XWOXV&scope=ZohoBooks.fullaccess.all&redirect_uri=http://localhost:5173/integrations/zoho/callback&access_type=offline&prompt=consent`;
+      const redirectUri = `${window.location.origin}/integrations/zoho/callback`;
+      window.location.href = `https://accounts.zoho.in/oauth/v2/auth?response_type=code&client_id=1000.XYPLYRU3UM8GAXPR6GJ9M58I4XWOXV&scope=ZohoBooks.fullaccess.all&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline&prompt=consent`;
       return;
     }
 

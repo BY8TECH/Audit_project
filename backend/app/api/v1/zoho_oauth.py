@@ -12,6 +12,7 @@ class ZohoOAuthCallbackRequest(BaseModel):
     code: str
     location: str  # e.g., 'in' or 'com'
     org_id: str
+    redirect_uri: str
 
 @router.post("/callback", status_code=status.HTTP_200_OK)
 async def zoho_oauth_callback(
@@ -37,7 +38,7 @@ async def zoho_oauth_callback(
         "grant_type": "authorization_code",
         "client_id": settings.ZOHO_CLIENT_ID,
         "client_secret": settings.ZOHO_CLIENT_SECRET,
-        "redirect_uri": settings.ZOHO_REDIRECT_URI,
+        "redirect_uri": request.redirect_uri,
         "code": request.code
     }
     

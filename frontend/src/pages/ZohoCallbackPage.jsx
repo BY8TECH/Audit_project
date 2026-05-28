@@ -34,11 +34,13 @@ export default function ZohoCallbackPage() {
         // Send to backend
         // We prompt the user for org_id quickly or extract it if stored in localStorage before redirect
         const orgId = localStorage.getItem('zoho_pending_org_id') || 'UNKNOWN';
+        const redirectUri = `${window.location.origin}/integrations/zoho/callback`;
         
         const response = await api.post('/integrations/zoho/callback', {
           code,
           location: state,
-          org_id: orgId
+          org_id: orgId,
+          redirect_uri: redirectUri
         });
 
         if (response.data.success) {
