@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     ]
 
     # Mock Data
-    USE_MOCK_DATA: bool = True
+    USE_MOCK_DATA: bool = False
 
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
