@@ -137,13 +137,16 @@ export default function DashboardPage() {
       ),
     },
     {
-      key: 'source',
+      key: 'source_platform',
       label: 'Source',
-      render: (val) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sourceColors[val] || 'bg-slate-500/10 text-slate-400'}`}>
-          {sourceLabels[val] || val}
-        </span>
-      ),
+      render: (val, row) => {
+        const sourceVal = val || row.source;
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sourceColors[sourceVal] || 'bg-slate-500/10 text-slate-400'}`}>
+            {sourceLabels[sourceVal] || sourceVal}
+          </span>
+        );
+      },
     },
     {
       key: 'status',
