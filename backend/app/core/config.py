@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
 
+    # Zoho OAuth Configuration
+    ZOHO_CLIENT_ID: str = "1000.XYPLYRU3UM8GAXPR6GJ9M58I4XWOXV"
+    ZOHO_CLIENT_SECRET: str = "e3e8ffcbcc1a1abb30ecda680f7d8622fc30d0e3a1"
+    ZOHO_REDIRECT_URI: str = "https://audit-project-blond.vercel.app/integrations/zoho/callback"
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",

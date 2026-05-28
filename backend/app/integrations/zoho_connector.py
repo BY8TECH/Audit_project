@@ -24,14 +24,41 @@ class ZohoConnector(BaseConnector):
             self._connected = True
             return True
 
-        self.access_token = self.credentials.get("api_key")
+        self.refresh_token = self.credentials.get("refresh_token")
         self.org_id = self.credentials.get("org_id")
+        self.location = self.credentials.get("location", "in")
         
-        if not self.access_token or not self.org_id:
-            raise ValueError("Missing Access Token (in API Key field) or Organization ID")
+        if not self.refresh_token or not self.org_id:
+            raise ValueError("Missing Refresh Token or Organization ID")
+
+        # Automatically fetch initial access token
+        await self._refresh_access_token()
 
         self._connected = True
         return True
+
+    async def _refresh_access_token(self):
+        """Fetch a new access token using the refresh token."""
+        url = f"https://accounts.zoho.{self.location}/oauth/v2/token"
+        data = {
+            "grant_type": "refresh_token",
+            "refresh_token": self.refresh_token,
+            "client_id": settings.ZOHO_CLIENT_ID,
+            "client_secret": settings.ZOHO_CLIENT_SECRET
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, data=data)
+            if response.status_code != 200:
+                self._connected = False
+                raise ValueError(f"Failed to refresh access token: {response.text}")
+            
+            json_data = response.json()
+            if "error" in json_data:
+                self._connected = False
+                raise ValueError(f"Zoho error refreshing token: {json_data['error']}")
+                
+            self.access_token = json_data.get("access_token")
+            self._connected = True
 
     async def disconnect(self) -> bool:
         """Disconnect from Zoho Books."""
@@ -60,7 +87,8 @@ class ZohoConnector(BaseConnector):
         if settings.USE_MOCK_DATA:
             return self._mock_provider.get_invoices()
 
-        url = "https://www.zohoapis.in/books/v3/invoices"
+        await self._refresh_access_token()
+        url = f"https://www.zohoapis.{self.location}/books/v3/invoices"
         headers = {"Authorization": f"Zoho-oauthtoken {self.access_token}"}
         query_params = {"organization_id": self.org_id}
         
@@ -75,7 +103,8 @@ class ZohoConnector(BaseConnector):
         if settings.USE_MOCK_DATA:
             return self._mock_provider.get_bills()
 
-        url = "https://www.zohoapis.in/books/v3/bills"
+        await self._refresh_access_token()
+        url = f"https://www.zohoapis.{self.location}/books/v3/bills"
         headers = {"Authorization": f"Zoho-oauthtoken {self.access_token}"}
         query_params = {"organization_id": self.org_id}
         

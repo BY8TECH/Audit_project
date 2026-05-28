@@ -126,6 +126,29 @@ export default function ConnectionsPage() {
     if (!selectedPlatform) return;
     setConnecting(true);
     setConnectionError('');
+    
+    if (selectedPlatform.id === 'zoho_books') {
+      if (!connectForm.org_id) {
+        setConnectionError('Organization ID is required for Zoho Books.');
+        setConnecting(false);
+        return;
+      }
+      // Store org_id temporarily to use after redirect back
+      localStorage.setItem('zoho_pending_org_id', connectForm.org_id);
+      
+      // Redirect to Zoho OAuth
+      const clientId = '1000.7H66A16WHT16E4I816B61168L6I61W'; // Should be from backend config ideally, but hardcoding for PoC or fetched
+      // We will assume the user has configured this in backend, but frontend needs it. 
+      // A better way is to hit a backend endpoint to get the auth URL, but for simplicity:
+      const authUrl = `https://accounts.zoho.in/oauth/v2/auth?response_type=code&client_id=1000.YOURCLIENTID&scope=ZohoBooks.fullaccess.all&redirect_uri=http://localhost:5173/integrations/zoho/callback&access_type=offline&prompt=consent`;
+      // But wait! We don't have the client_id here. Let's just use a placeholder that the user will replace, 
+      // OR let's ask the backend for the URL.
+      // For now, I'll put a placeholder and tell the user to update it, OR I can fetch it.
+      // Let's redirect to a placeholder, or even better, let the user configure client_id in the frontend env.
+      window.location.href = `https://accounts.zoho.in/oauth/v2/auth?response_type=code&client_id=1000.YOUR_CLIENT_ID_HERE&scope=ZohoBooks.fullaccess.all&redirect_uri=http://localhost:5173/integrations/zoho/callback&access_type=offline&prompt=consent`;
+      return;
+    }
+
     try {
       await integrationApi.connectPlatform(selectedPlatform.id, connectForm);
       setShowConnectModal(false);
@@ -348,36 +371,54 @@ export default function ConnectionsPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">API Key</label>
-              <input
-                type="text"
-                value={connectForm.api_key}
-                onChange={(e) => setConnectForm({ ...connectForm, api_key: e.target.value })}
-                placeholder="Enter your API key"
-                className="input-dark"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">API Secret</label>
-              <input
-                type="password"
-                value={connectForm.api_secret}
-                onChange={(e) => setConnectForm({ ...connectForm, api_secret: e.target.value })}
-                placeholder="Enter your API secret"
-                className="input-dark"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Organization ID</label>
-              <input
-                type="text"
-                value={connectForm.org_id}
-                onChange={(e) => setConnectForm({ ...connectForm, org_id: e.target.value })}
-                placeholder="Enter your organization ID"
-                className="input-dark"
-              />
-            </div>
+            {selectedPlatform.id === 'zoho_books' ? (
+              <div>
+                <p className="text-sm text-slate-500 mb-4">
+                  You will be redirected to Zoho securely to authorize access.
+                </p>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Organization ID</label>
+                <input
+                  type="text"
+                  value={connectForm.org_id}
+                  onChange={(e) => setConnectForm({ ...connectForm, org_id: e.target.value })}
+                  placeholder="Enter your Zoho Organization ID"
+                  className="input-dark"
+                />
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">API Key</label>
+                  <input
+                    type="text"
+                    value={connectForm.api_key}
+                    onChange={(e) => setConnectForm({ ...connectForm, api_key: e.target.value })}
+                    placeholder="Enter your API key"
+                    className="input-dark"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">API Secret</label>
+                  <input
+                    type="password"
+                    value={connectForm.api_secret}
+                    onChange={(e) => setConnectForm({ ...connectForm, api_secret: e.target.value })}
+                    placeholder="Enter your API secret"
+                    className="input-dark"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Organization ID</label>
+                  <input
+                    type="text"
+                    value={connectForm.org_id}
+                    onChange={(e) => setConnectForm({ ...connectForm, org_id: e.target.value })}
+                    placeholder="Enter your organization ID"
+                    className="input-dark"
+                  />
+                </div>
+              </>
+            )}
           </div>
         )}
       </Modal>

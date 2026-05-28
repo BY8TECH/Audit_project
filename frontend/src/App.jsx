@@ -9,6 +9,7 @@ import IntegrationsPage from './pages/IntegrationsPage';
 import ReconciliationPage from './pages/ReconciliationPage';
 import SettingsPage from './pages/SettingsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ZohoCallbackPage from './pages/ZohoCallbackPage';
 import Loader from './components/ui/Loader';
 import { Toaster } from 'react-hot-toast';
 
@@ -66,6 +67,7 @@ function AppRoutes() {
         <Route path="/integrations" element={<IntegrationsPage />} />
         <Route path="/reconciliation" element={<ReconciliationPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/integrations/zoho/callback" element={<ZohoCallbackPage />} />
       </Route>
 
       {/* Redirect root to dashboard */}
