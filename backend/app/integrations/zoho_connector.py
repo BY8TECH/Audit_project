@@ -90,13 +90,23 @@ class ZohoConnector(BaseConnector):
         await self._refresh_access_token()
         url = f"https://www.zohoapis.{self.location}/books/v3/invoices"
         headers = {"Authorization": f"Zoho-oauthtoken {self.access_token}"}
-        query_params = {"organization_id": self.org_id}
+        all_invoices = []
+        page = 1
+        has_more_page = True
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, headers=headers, params=query_params)
-            response.raise_for_status()
-            data = response.json()
-            return data.get("invoices", [])
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            while has_more_page:
+                query_params = {"organization_id": self.org_id, "page": page, "per_page": 200}
+                response = await client.get(url, headers=headers, params=query_params)
+                response.raise_for_status()
+                data = response.json()
+                all_invoices.extend(data.get("invoices", []))
+                
+                page_context = data.get("page_context", {})
+                has_more_page = page_context.get("has_more_page", False)
+                page += 1
+                
+        return all_invoices
 
     async def fetch_bills(self, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Fetch bills from Zoho Books."""
@@ -106,13 +116,23 @@ class ZohoConnector(BaseConnector):
         await self._refresh_access_token()
         url = f"https://www.zohoapis.{self.location}/books/v3/bills"
         headers = {"Authorization": f"Zoho-oauthtoken {self.access_token}"}
-        query_params = {"organization_id": self.org_id}
+        all_bills = []
+        page = 1
+        has_more_page = True
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, headers=headers, params=query_params)
-            response.raise_for_status()
-            data = response.json()
-            return data.get("bills", [])
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            while has_more_page:
+                query_params = {"organization_id": self.org_id, "page": page, "per_page": 200}
+                response = await client.get(url, headers=headers, params=query_params)
+                response.raise_for_status()
+                data = response.json()
+                all_bills.extend(data.get("bills", []))
+                
+                page_context = data.get("page_context", {})
+                has_more_page = page_context.get("has_more_page", False)
+                page += 1
+                
+        return all_bills
 
     async def fetch_trial_balance(self, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Fetch trial balance from Zoho Books."""

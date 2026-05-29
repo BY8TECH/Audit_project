@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 
 export default function DataTable({
@@ -11,12 +11,31 @@ export default function DataTable({
   emptyIcon: EmptyIcon = Inbox,
   onRowClick,
   className = '',
+  // Server-side pagination props
+  serverSide = false,
+  totalItems = 0,
+  currentPage = 1,
+  onPageChange,
+  onPageSizeChange,
 }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-  const [currentPage, setCurrentPage] = useState(1);
+  
+  // Local state for client-side pagination
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(pageSize);
 
-  // Sorting
+  // Synchronize local page size with prop if it changes initially
+  useEffect(() => {
+    if (!serverSide) setLocalPageSize(pageSize);
+  }, [pageSize, serverSide]);
+
+  const activePage = serverSide ? currentPage : localPage;
+  const activePageSize = serverSide ? pageSize : localPageSize;
+  const activeTotal = serverSide ? totalItems : data.length;
+
+  // Sorting (Only applied client-side if not serverSide)
   const sortedData = useMemo(() => {
+    if (serverSide) return data; // Server handles sorting
     if (!sortConfig.key) return data;
     return [...data].sort((a, b) => {
       const aVal = a[sortConfig.key];
@@ -27,14 +46,17 @@ export default function DataTable({
       const compare = aVal < bVal ? -1 : 1;
       return sortConfig.direction === 'asc' ? compare : -compare;
     });
-  }, [data, sortConfig]);
+  }, [data, sortConfig, serverSide]);
 
   // Pagination
-  const totalPages = Math.ceil(sortedData.length / pageSize);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const totalPages = Math.ceil(activeTotal / activePageSize);
+  
+  const paginatedData = serverSide 
+    ? data 
+    : sortedData.slice(
+        (activePage - 1) * activePageSize,
+        activePage * activePageSize
+      );
 
   const handleSort = (key) => {
     if (!sortable) return;
@@ -42,6 +64,24 @@ export default function DataTable({
       key,
       direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
     }));
+  };
+
+  const handlePageChange = (newPage) => {
+    if (serverSide && onPageChange) {
+      onPageChange(newPage);
+    } else {
+      setLocalPage(newPage);
+    }
+  };
+
+  const handlePageSizeChange = (e) => {
+    const newSize = Number(e.target.value);
+    if (serverSide && onPageSizeChange) {
+      onPageSizeChange(newSize);
+    } else {
+      setLocalPageSize(newSize);
+      setLocalPage(1); // Reset to first page
+    }
   };
 
   const SortIcon = ({ columnKey }) => {
@@ -84,7 +124,7 @@ export default function DataTable({
                     ${col.align === 'right' ? 'justify-end' : ''}
                     ${col.align === 'center' ? 'justify-center' : ''}`}>
                     {col.label}
-                    {sortable && col.sortable !== false && <SortIcon columnKey={col.key} />}
+                    {sortable && col.sortable !== false && !serverSide && <SortIcon columnKey={col.key} />}
                   </div>
                 </th>
               ))}
@@ -116,48 +156,74 @@ export default function DataTable({
         </table>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200">
+      {/* Pagination & Footer Controls */}
+      <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-3 border-t border-slate-200 gap-4">
+        
+        <div className="flex items-center gap-3">
           <p className="text-xs text-slate-500">
-            Showing {((currentPage - 1) * pageSize) + 1}–{Math.min(currentPage * pageSize, sortedData.length)} of{' '}
-            {sortedData.length}
+            Showing {((activePage - 1) * activePageSize) + 1}–{Math.min(activePage * activePageSize, activeTotal)} of {activeTotal}
           </p>
+          
+          <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+            <span className="text-xs text-slate-500">Rows per page:</span>
+            <select 
+              value={activePageSize}
+              onChange={handlePageSizeChange}
+              className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-brand-cyan"
+            >
+              {[10, 25, 50, 100, 200].map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {totalPages > 1 && (
           <div className="flex items-center gap-1">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => handlePageChange(Math.max(1, activePage - 1))}
+              disabled={activePage === 1}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 
                 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              const page = i + 1;
-              return (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors
-                    ${currentPage === page
-                      ? 'bg-brand-cyan/20 text-brand-cyan'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
-                >
-                  {page}
-                </button>
-              );
-            })}
+            
+            {/* Logic to show a sliding window of pages could go here. For now, simple array */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => page === 1 || page === totalPages || (page >= activePage - 1 && page <= activePage + 1))
+              .map((page, index, array) => {
+                // Add ellipsis if gap
+                if (index > 0 && page - array[index - 1] > 1) {
+                  return (
+                    <span key={`ellipsis-${page}`} className="px-2 text-slate-400">...</span>
+                  );
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors
+                      ${activePage === page
+                        ? 'bg-brand-cyan/20 text-brand-cyan'
+                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+              
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(Math.min(totalPages, activePage + 1))}
+              disabled={activePage === totalPages}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 
                 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

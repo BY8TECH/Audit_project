@@ -91,6 +91,9 @@ export default function IntegrationsPage() {
   const [previewPlatform, setPreviewPlatform] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewPage, setPreviewPage] = useState(1);
+  const [previewPageSize, setPreviewPageSize] = useState(10);
+  const [previewTotal, setPreviewTotal] = useState(0);
 
   const { data: platformsData } = useFetch(useCallback(() => integrationApi.getPlatforms(), []), [], { initialData: null });
 
@@ -98,7 +101,7 @@ export default function IntegrationsPage() {
     setExpandedPlatform(expandedPlatform === platformId ? null : platformId);
   };
 
-  const handlePreview = async (platformId) => {
+  const handlePreview = async (platformId, page = 1, pageSize = 10) => {
     setPreviewPlatform(platformId);
     setPreviewLoading(true);
 
@@ -113,8 +116,8 @@ export default function IntegrationsPage() {
       }
       
       if (connectionId) {
-        const response = await integrationApi.getData(connectionId, { page_size: 10 });
-        if (response && response.items && response.items.length > 0) {
+        const response = await integrationApi.getData(connectionId, { page, page_size: pageSize });
+        if (response && response.items) {
            const mappedData = response.items.map(item => {
               if (platformId === 'zoho_books') {
                   return {
@@ -142,11 +145,14 @@ export default function IntegrationsPage() {
               };
            });
            setPreviewData(mappedData);
+           setPreviewTotal(response.total || mappedData.length);
            return;
         }
       }
       // Fallback
-      setPreviewData(demoPreviewData[platformId] || []);
+      const fallbackData = demoPreviewData[platformId] || [];
+      setPreviewData(fallbackData);
+      setPreviewTotal(fallbackData.length);
     } catch (err) {
       console.error(err);
       setPreviewData(demoPreviewData[platformId] || []);
@@ -272,6 +278,8 @@ export default function IntegrationsPage() {
         onClose={() => {
           setPreviewPlatform(null);
           setPreviewData(null);
+          setPreviewPage(1);
+          setPreviewPageSize(10);
         }}
         title="Data Preview"
         subtitle={PLATFORM_LIST.find((p) => p.id === previewPlatform)?.name || ''}
@@ -283,8 +291,19 @@ export default function IntegrationsPage() {
           <DataTable
             columns={previewColumns[previewPlatform] || []}
             data={previewData}
-            pageSize={5}
-            sortable={false}
+            serverSide={true}
+            totalItems={previewTotal}
+            currentPage={previewPage}
+            pageSize={previewPageSize}
+            onPageChange={(page) => {
+              setPreviewPage(page);
+              handlePreview(previewPlatform, page, previewPageSize);
+            }}
+            onPageSizeChange={(size) => {
+              setPreviewPageSize(size);
+              setPreviewPage(1);
+              handlePreview(previewPlatform, 1, size);
+            }}
             emptyMessage="No data available for preview"
           />
         ) : (
