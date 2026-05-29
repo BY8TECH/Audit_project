@@ -123,17 +123,23 @@ class SyncService:
 
         # Fetch and normalize invoices
         invoices = await connector.fetch_invoices()
+        normalized_invoices = []
         for inv in invoices:
-            normalized = NormalizerService.normalize_zoho_invoice(inv, user_id, connection_id)
-            await financial_data.insert_one(normalized)
-            count += 1
+            normalized_invoices.append(NormalizerService.normalize_zoho_invoice(inv, user_id, connection_id))
+        
+        if normalized_invoices:
+            await financial_data.insert_many(normalized_invoices)
+            count += len(normalized_invoices)
 
         # Fetch and normalize bills
         bills = await connector.fetch_bills()
+        normalized_bills = []
         for bill in bills:
-            normalized = NormalizerService.normalize_zoho_bill(bill, user_id, connection_id)
-            await financial_data.insert_one(normalized)
-            count += 1
+            normalized_bills.append(NormalizerService.normalize_zoho_bill(bill, user_id, connection_id))
+            
+        if normalized_bills:
+            await financial_data.insert_many(normalized_bills)
+            count += len(normalized_bills)
 
         return count
 
